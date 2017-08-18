@@ -322,7 +322,7 @@ func benchServer() {
 					req := fasthttp.AcquireRequest()
 					req.SetRequestURIBytes(uri)
 					for _, header := range bullet.Request.Headers {
-						req.Header.AddBytesKV(header.Key, header.Value)
+						req.Header.SetBytesKV(header.Key, header.Value)
 					}
 					if len(bullet.Request.Body) > 0 {
 						req.SetBody(bullet.Request.Body)
