@@ -4,6 +4,13 @@
 
 Для запуска теста нужно иметь локально склонированную репу `github.com/sat2707/hlcupdocs`, или хотя бы ее кусок `/hlcupdocs/data/{TRAIN,FULL}/`.
 
+#### Сборка
+```bash
+cd $GOPATH
+git clone https://github.com/AterCattus/highloadcup_tester.git
+cd highloadcup_tester
+go get && go build
+```
 
 #### Проверка корректности:
 Для примера фаза 1, каждый запрос выполняется по одному разу.
