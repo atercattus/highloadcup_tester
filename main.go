@@ -161,14 +161,14 @@ func loadDataRequests(fileName string) (chan Request, error) {
 				if err == io.EOF {
 					break
 				}
-				panic(errors.Wrap(err, `rd.ReadBytes`))
+				panic(errors.Wrap(err, fmt.Sprintf(`rd.ReadBytes in %s line#%d`, fileName, lineNo)))
 			} else {
 				line = bytes.TrimSpace(line)
 
 				switch state {
 				case stateBlockHeader:
 					if match := reFirstLine.FindSubmatch(line); len(match) != 2 {
-						panic(errors.Wrap(ErrWrongAmmoFile, fmt.Sprintf(`Wrong block header line#%d: %s`, lineNo, line)))
+						panic(errors.Wrap(ErrWrongAmmoFile, fmt.Sprintf(`Wrong block header in %s line#%d: %s`, fileName, lineNo, line)))
 					}
 					state = stateQuery
 
@@ -183,7 +183,7 @@ func loadDataRequests(fileName string) (chan Request, error) {
 
 				case stateQuery:
 					if match := reQuery.FindSubmatch(line); len(match) != 3 {
-						panic(errors.Wrap(ErrWrongAmmoFile, fmt.Sprintf(`Wrong query line#%d: %s`, lineNo, line)))
+						panic(errors.Wrap(ErrWrongAmmoFile, fmt.Sprintf(`Wrong query in %s line#%d: %s`, fileName, lineNo, line)))
 					} else {
 						request.IsGet = bytes.Equal(match[1], methodGET)
 						request.URI = append([]byte{}, match[2]...)
