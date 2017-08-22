@@ -9,7 +9,7 @@
 cd $GOPATH
 git clone https://github.com/AterCattus/highloadcup_tester.git
 cd highloadcup_tester
-go get && go build
+go get && CGO_ENABLED=0 go build -ldflags '-s -extldflags "-static"' -installsuffix netgo
 ```
 
 #### Проверка корректности:
