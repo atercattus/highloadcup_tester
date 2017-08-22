@@ -205,7 +205,7 @@ func loadDataRequests(fileName string) (chan Request, error) {
 
 						request.Headers = append(request.Headers, Header{Key: key, Value: value})
 
-						if bytes.Equal(key, headerContentLength) {
+						if bytes.Equal(key, headerContentLength) && !bytes.Equal(value, []byte{'0'}) { // хак учета "Content-Length: 0"
 							withBody = true
 						}
 					}
