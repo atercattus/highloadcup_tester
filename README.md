@@ -6,6 +6,10 @@
 
 #### Сборка
 ```bash
+go get -u github.com/AterCattus/highloadcup_tester
+```
+либо:
+```bash
 cd $GOPATH
 git clone https://github.com/AterCattus/highloadcup_tester.git
 cd highloadcup_tester
