@@ -27,6 +27,10 @@ var (
 	ErrResponseDiff  = errors.New(`The server response is different than expected`)
 )
 
+var (
+	bytesNull = []byte(`null`)
+)
+
 type (
 	Header struct {
 		Key, Value []byte
@@ -60,6 +64,7 @@ var (
 		concurrent    uint
 		testRun       bool
 		hideFailed    bool
+		allowNulls    bool
 	}
 
 	bullets []*Bullet
@@ -75,6 +80,7 @@ func init() {
 	flag.UintVar(&argv.concurrent, `concurrent`, 1, `concurrent users`)
 	flag.BoolVar(&argv.testRun, `test`, false, `test run (send every query only once. ignore -time and -concurrent)`)
 	flag.BoolVar(&argv.hideFailed, `hide-failed`, false, `do not print info about every failed request`)
+	flag.BoolVar(&argv.allowNulls, `allow-nulls`, false, `allow null in response data`)
 	flag.Parse()
 }
 
@@ -431,6 +437,11 @@ func jsEqual(dataType jsonparser.ValueType, smthResponse, smthBullet []byte) boo
 		return jsEqualArrays(smthResponse, smthBullet)
 	case jsonparser.Object:
 		return jsEqualObjects(smthResponse, smthBullet)
+	case jsonparser.Null:
+		if !argv.allowNulls {
+			return false
+		}
+		return bytes.Equal(smthResponse, bytesNull) && bytes.Equal(smthResponse, smthBullet)
 	default:
 		// не поддерживаемый тип
 		return false
