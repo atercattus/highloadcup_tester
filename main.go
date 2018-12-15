@@ -296,7 +296,7 @@ func benchServer() {
 
 	mt := time.Now().UnixNano()
 
-	var enought int64
+	var enough int64
 
 	concurrent := int(argv.concurrent)
 
@@ -323,7 +323,7 @@ func benchServer() {
 			uri := []byte(argv.serverAddr)
 			uriBase := len(uri)
 
-			for atomic.LoadInt64(&enought) == 0 {
+			for atomic.LoadInt64(&enough) == 0 {
 				for bulletIdx, bullet := range bullets {
 					uri = append(uri[:uriBase], bullet.Request.URI...)
 
@@ -370,7 +370,7 @@ func benchServer() {
 
 	if !argv.testRun {
 		time.Sleep(argv.benchTime)
-		atomic.StoreInt64(&enought, 1)
+		atomic.StoreInt64(&enough, 1)
 	}
 
 	wg.Wait()
