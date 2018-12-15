@@ -155,7 +155,7 @@ func loadDataRequests(fileName string) (chan Request, error) {
 		)
 
 		var (
-			reFirstLine         = regexp.MustCompile(`^\d+ (GET|POST):`)
+			reFirstLine         = regexp.MustCompile(`^\d+( (GET|POST):|$)`)
 			reQuery             = regexp.MustCompile(`^(GET|POST) ([^\s]+) HTTP/`)
 			methodGET           = []byte(`GET`)
 			headerContentLength = []byte(`Content-Length`)
@@ -181,8 +181,8 @@ func loadDataRequests(fileName string) (chan Request, error) {
 
 				switch state {
 				case stateBlockHeader:
-					if match := reFirstLine.FindSubmatch(line); len(match) != 2 {
-						panic(errors.Wrap(ErrWrongAmmoFile, fmt.Sprintf(`Wrong block header in %s line#%d: %s`, fileName, lineNo, line)))
+					if !reFirstLine.Match(line) {
+						panic(errors.Wrap(ErrWrongAmmoFile, fmt.Sprintf(`Wrong block header in %s line#%d: [%s]`, fileName, lineNo, line)))
 					}
 					state = stateQuery
 
