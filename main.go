@@ -53,6 +53,12 @@ type (
 		Request  Request
 		Response Response
 	}
+
+	BenchResult struct {
+		bulletIdx int
+		status    int
+		body      []byte
+	}
 )
 
 var (
@@ -65,6 +71,7 @@ var (
 		testRun       bool
 		hideFailed    bool
 		allowNulls    bool
+		utf8          bool
 	}
 
 	bullets []*Bullet
@@ -81,6 +88,7 @@ func init() {
 	flag.BoolVar(&argv.testRun, `test`, false, `test run (send every query only once. ignore -time and -concurrent)`)
 	flag.BoolVar(&argv.hideFailed, `hide-failed`, false, `do not print info about every failed request`)
 	flag.BoolVar(&argv.allowNulls, `allow-nulls`, false, `allow null in response data`)
+	flag.BoolVar(&argv.utf8, `utf8`, false, `show request & response bodies in UTF-8 human-readable format`)
 	flag.Parse()
 }
 
@@ -282,12 +290,6 @@ func loadDataResponses(fileName string) (chan Response, error) {
 }
 
 func benchServer() {
-	type benchResult struct {
-		bulletIdx int
-		status    int
-		body      []byte
-	}
-
 	var queries int64
 
 	client := &fasthttp.Client{}
@@ -305,7 +307,7 @@ func benchServer() {
 		fmt.Printf("Start %s benchmark in %d concurrent users\n", argv.benchTime, concurrent)
 	}
 
-	benchResultsAll := make([][]benchResult, concurrent)
+	benchResultsAll := make([][]BenchResult, concurrent)
 
 	var wg sync.WaitGroup
 
@@ -339,7 +341,7 @@ func benchServer() {
 
 					resp := fasthttp.AcquireResponse()
 
-					oneBenchResult := benchResult{bulletIdx: bulletIdx}
+					oneBenchResult := BenchResult{bulletIdx: bulletIdx}
 
 					myQueries++
 
@@ -395,14 +397,18 @@ func benchServer() {
 
 				if benchResult.status != bullet.Response.Status {
 					if !hideFailed {
-						fmt.Printf("REQUEST URI:%s BODY:%s\n", bullet.Request.URI, string(bullet.Request.Body))
-						fmt.Printf("\tRESPONSE STATUS GOT %d != EXPECT %d. BODY GOT %s / EXPECT %s\n", benchResult.status, bullet.Response.Status, benchResult.body, bullet.Response.Body)
+						bodyReq, bodyRespGot, bodyRespExpect := getReqRespBodies(bullet, &benchResult)
+						fmt.Printf("REQUEST URI:%s BODY:%s\n", bullet.Request.URI, bodyReq)
+						fmt.Printf("\tRESPONSE STATUS GOT %d != EXPECT %d. BODY GOT %s / EXPECT %s\n",
+							benchResult.status, bullet.Response.Status, bodyRespGot, bodyRespExpect,
+						)
 					}
 					myErrors++
 				} else if (bullet.Response.Status == 200) && !equalResponseBodies(benchResult.body, bullet.Response.Body) {
 					if !hideFailed {
-						fmt.Printf("REQUEST URI:%s BODY:%s\n", bullet.Request.URI, string(bullet.Request.Body))
-						fmt.Printf("\tRESPONSE BODY GOT %s != EXPECT %s\n", benchResult.body, bullet.Response.Body)
+						bodyReq, bodyRespGot, bodyRespExpect := getReqRespBodies(bullet, &benchResult)
+						fmt.Printf("REQUEST URI:%s BODY:%s\n", bullet.Request.URI, bodyReq)
+						fmt.Printf("\tRESPONSE BODY GOT %s != EXPECT %s\n", bodyRespGot, bodyRespExpect)
 					}
 					myErrors++
 				}
@@ -543,4 +549,18 @@ func utf8Unescaped(b []byte) []byte {
 	json.Unmarshal(buf.Bytes(), &s)
 
 	return []byte(s)
+}
+
+func getReqRespBodies(bullet *Bullet, benchResult *BenchResult) (bodyReq, bodyRespGot, bodyRespExpect []byte) {
+	bodyReq = bullet.Request.Body
+	bodyRespGot = benchResult.body
+	bodyRespExpect = bullet.Response.Body
+
+	if argv.utf8 {
+		bodyReq = utf8Unescaped(bodyReq)
+		bodyRespGot = utf8Unescaped(bodyRespGot)
+		bodyRespExpect = utf8Unescaped(bodyRespExpect)
+	}
+
+	return
 }
