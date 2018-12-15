@@ -10,12 +10,12 @@
 
 #### Сборка
 ```bash
-go get -u github.com/AterCattus/highloadcup_tester
+go get -u github.com/atercattus/highloadcup_tester
 ```
 либо:
 ```bash
 cd $GOPATH
-git clone https://github.com/AterCattus/highloadcup_tester.git
+git clone https://github.com/atercattus/highloadcup_tester.git
 cd highloadcup_tester
 go get && CGO_ENABLED=0 go build -ldflags '-s -extldflags "-static"' -installsuffix netgo
 ```
