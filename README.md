@@ -4,7 +4,9 @@
 
 Для запуска теста нужно иметь локально склонированную репу `github.com/sat2707/hlcupdocs`, или хотя бы ее кусок `/hlcupdocs/data/{TRAIN,FULL}/`.
 
-**Для второго капа (2018 год) нужны архивы с патронами по ссылкам вида https://highloadcup.ru/media/condition/test_accounts_141218.zip (из раздела "Тестовые данные" тут https://highloadcup.ru/ru/round/3/). После распаковки запускать `./highloadcup_tester -hlcupdocs path/to/unpacked/zip/`, чтобы существовали пути path/to/unpacked/zip/{ammo,answers}.**
+**Для второго капа (2018 год) нужны архивы с патронами по ссылкам вида https://highloadcup.ru/media/condition/test_accounts_141218.zip (из раздела "Тестовые данные" тут https://highloadcup.ru/ru/round/3/).**
+
+**После распаковки запускать `./highloadcup_tester -hlcupdocs path/to/unpacked/zip/`, чтобы существовали пути `path/to/unpacked/zip/{ammo,answers}`.**
 
 #### Сборка
 ```bash
