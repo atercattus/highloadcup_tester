@@ -396,13 +396,13 @@ func benchServer() {
 				if benchResult.status != bullet.Response.Status {
 					if !hideFailed {
 						fmt.Printf("REQUEST URI:%s BODY:%s\n", bullet.Request.URI, string(bullet.Request.Body))
-						fmt.Printf("\tRESPONSE STATUS %d != %d. BODY %s / %s\n", benchResult.status, bullet.Response.Status, benchResult.body, bullet.Response.Body)
+						fmt.Printf("\tRESPONSE STATUS GOT %d != EXPECT %d. BODY GOT %s / EXPECT %s\n", benchResult.status, bullet.Response.Status, benchResult.body, bullet.Response.Body)
 					}
 					myErrors++
 				} else if (bullet.Response.Status == 200) && !equalResponseBodies(benchResult.body, bullet.Response.Body) {
 					if !hideFailed {
 						fmt.Printf("REQUEST URI:%s BODY:%s\n", bullet.Request.URI, string(bullet.Request.Body))
-						fmt.Printf("\tRESPONSE BODY %s != %s\n", benchResult.body, bullet.Response.Body)
+						fmt.Printf("\tRESPONSE BODY GOT %s != EXPECT %s\n", benchResult.body, bullet.Response.Body)
 					}
 					myErrors++
 				}
