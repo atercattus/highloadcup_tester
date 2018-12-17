@@ -28,7 +28,8 @@ var (
 )
 
 var (
-	bytesNull = []byte(`null`)
+	bytesNull  = []byte(`null`)
+	bytesEmpty = []byte(`<EMPTY>`)
 )
 
 type (
@@ -398,8 +399,8 @@ func benchServer() {
 				if benchResult.status != bullet.Response.Status {
 					if !hideFailed {
 						bodyReq, bodyRespGot, bodyRespExpect := getReqRespBodies(bullet, &benchResult)
-						fmt.Printf("REQUEST URI:%s BODY:%s\n", bullet.Request.URI, bodyReq)
-						fmt.Printf("\tRESPONSE STATUS GOT %d != EXPECT %d. BODY GOT %s / EXPECT %s\n",
+						fmt.Printf("REQUEST  URI: %s\nREQUEST BODY: %s\n", bullet.Request.URI, bodyReq)
+						fmt.Printf("STATUS GOT: %d \nSTATUS EXP: %d\nBODY   GOT: %s\nBODY   EXP: %s\n\n",
 							benchResult.status, bullet.Response.Status, bodyRespGot, bodyRespExpect,
 						)
 					}
@@ -407,8 +408,8 @@ func benchServer() {
 				} else if (bullet.Response.Status == 200) && !equalResponseBodies(benchResult.body, bullet.Response.Body) {
 					if !hideFailed {
 						bodyReq, bodyRespGot, bodyRespExpect := getReqRespBodies(bullet, &benchResult)
-						fmt.Printf("REQUEST URI:%s BODY:%s\n", bullet.Request.URI, bodyReq)
-						fmt.Printf("\tRESPONSE BODY GOT %s != EXPECT %s\n", bodyRespGot, bodyRespExpect)
+						fmt.Printf("REQUEST  URI: %s\nREQUEST BODY: %s\n", bullet.Request.URI, bodyReq)
+						fmt.Printf("BODY GOT: %s\nBODY EXP: %s\n\n", bodyRespGot, bodyRespExpect)
 					}
 					myErrors++
 				}
@@ -551,15 +552,30 @@ func utf8Unescaped(b []byte) []byte {
 	return []byte(s)
 }
 
+func utf8MixedUnescaped(b []byte) []byte {
+	if len(b) == 0 {
+		return bytesEmpty
+	}
+
+	var v interface{}
+	json.Unmarshal(b, &v)
+
+	res, err := json.Marshal(v)
+	if err != nil {
+		res = b
+	}
+	return res
+}
+
 func getReqRespBodies(bullet *Bullet, benchResult *BenchResult) (bodyReq, bodyRespGot, bodyRespExpect []byte) {
 	bodyReq = bullet.Request.Body
 	bodyRespGot = benchResult.body
 	bodyRespExpect = bullet.Response.Body
 
 	if argv.utf8 {
-		bodyReq = utf8Unescaped(bodyReq)
-		bodyRespGot = utf8Unescaped(bodyRespGot)
-		bodyRespExpect = utf8Unescaped(bodyRespExpect)
+		bodyReq = utf8MixedUnescaped(bodyReq)
+		bodyRespGot = utf8MixedUnescaped(bodyRespGot)
+		bodyRespExpect = utf8MixedUnescaped(bodyRespExpect)
 	}
 
 	return
