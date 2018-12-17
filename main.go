@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/buger/jsonparser"
 	"github.com/pkg/errors"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/valyala/fasthttp"
 	"io"
 	"log"
@@ -73,6 +74,7 @@ var (
 		hideFailed    bool
 		allowNulls    bool
 		utf8          bool
+		bodyDiff      bool
 	}
 
 	bullets []*Bullet
@@ -90,6 +92,7 @@ func init() {
 	flag.BoolVar(&argv.hideFailed, `hide-failed`, false, `do not print info about every failed request`)
 	flag.BoolVar(&argv.allowNulls, `allow-nulls`, false, `allow null in response data`)
 	flag.BoolVar(&argv.utf8, `utf8`, false, `show request & response bodies in UTF-8 human-readable format`)
+	flag.BoolVar(&argv.bodyDiff, `diff`, false, `show colorful body diffs instead both variants (red - wrong, green - need)`)
 	flag.Parse()
 }
 
@@ -400,16 +403,30 @@ func benchServer() {
 					if !hideFailed {
 						bodyReq, bodyRespGot, bodyRespExpect := getReqRespBodies(bullet, &benchResult)
 						fmt.Printf("REQUEST  URI: %s\nREQUEST BODY: %s\n", bullet.Request.URI, bodyReq)
-						fmt.Printf("STATUS GOT: %d \nSTATUS EXP: %d\nBODY   GOT: %s\nBODY   EXP: %s\n\n",
-							benchResult.status, bullet.Response.Status, bodyRespGot, bodyRespExpect,
-						)
+						fmt.Printf("STATUS GOT: %d \nSTATUS EXP: %d\n", benchResult.status, bullet.Response.Status)
+
+						if argv.bodyDiff {
+							dmp := diffmatchpatch.New()
+							diffs := dmp.DiffMain(string(bodyRespGot), string(bodyRespExpect), false)
+							fmt.Printf("BODIES DIFF: %s\n\n", dmp.DiffPrettyText(diffs))
+						} else {
+							fmt.Printf("BODY   GOT: %s\nBODY   EXP: %s\n\n", bodyRespGot, bodyRespExpect)
+						}
+
 					}
 					myErrors++
 				} else if (bullet.Response.Status == 200) && !equalResponseBodies(benchResult.body, bullet.Response.Body) {
 					if !hideFailed {
 						bodyReq, bodyRespGot, bodyRespExpect := getReqRespBodies(bullet, &benchResult)
 						fmt.Printf("REQUEST  URI: %s\nREQUEST BODY: %s\n", bullet.Request.URI, bodyReq)
-						fmt.Printf("BODY GOT: %s\nBODY EXP: %s\n\n", bodyRespGot, bodyRespExpect)
+
+						if argv.bodyDiff {
+							dmp := diffmatchpatch.New()
+							diffs := dmp.DiffMain(string(bodyRespGot), string(bodyRespExpect), false)
+							fmt.Printf("BODIES DIFF: %s\n\n", dmp.DiffPrettyText(diffs))
+						} else {
+							fmt.Printf("BODY   GOT: %s\nBODY   EXP: %s\n\n", bodyRespGot, bodyRespExpect)
+						}
 					}
 					myErrors++
 				}
