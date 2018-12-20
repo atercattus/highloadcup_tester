@@ -6,10 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/buger/jsonparser"
-	"github.com/pkg/errors"
-	"github.com/sergi/go-diff/diffmatchpatch"
-	"github.com/valyala/fasthttp"
 	"io"
 	"log"
 	"math"
@@ -20,6 +16,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/buger/jsonparser"
+	"github.com/pkg/errors"
+	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/valyala/fasthttp"
 )
 
 var (
@@ -39,6 +40,7 @@ type (
 	}
 
 	Request struct {
+		Skip    bool
 		LineNo  int
 		IsGet   bool
 		URI     []byte
@@ -67,6 +69,7 @@ var (
 	argv struct {
 		hlcupdocsPath string
 		serverAddr    string
+		filterReq     string
 		phase         uint
 		benchTime     time.Duration
 		concurrent    uint
@@ -85,6 +88,7 @@ var (
 func init() {
 	flag.StringVar(&argv.hlcupdocsPath, `hlcupdocs`, `./hlcupdocs/`, `path to hlcupdocs/`)
 	flag.StringVar(&argv.serverAddr, `addr`, `http://127.0.0.1:80`, `test server address`)
+	flag.StringVar(&argv.filterReq, `filter`, ``, `regexp for filter requests, i.e. "^458 " or "/accounts/filter/"`)
 	flag.UintVar(&argv.phase, `phase`, 1, `phase number (1, 2, 3)`)
 	flag.DurationVar(&argv.benchTime, `time`, 10*time.Second, `benchmark duration`)
 	flag.UintVar(&argv.concurrent, `concurrent`, 1, `concurrent users`)
@@ -129,8 +133,9 @@ func loadData() error {
 			if !ok {
 				return errors.Wrap(err, `Answers is not enought`)
 			}
-
-			bullets = append(bullets, &Bullet{Request: request, Response: response})
+			if !request.Skip {
+				bullets = append(bullets, &Bullet{Request: request, Response: response})
+			}
 		}
 	}
 
@@ -163,7 +168,13 @@ func loadDataRequests(fileName string) (chan Request, error) {
 			reQuery             = regexp.MustCompile(`^(GET|POST) ([^\s]+) HTTP/`)
 			methodGET           = []byte(`GET`)
 			headerContentLength = []byte(`Content-Length`)
+			rex                 *regexp.Regexp
 		)
+
+		if len(argv.filterReq) > 0 {
+			fmt.Printf("...using filter %q", argv.filterReq)
+			rex = regexp.MustCompile(argv.filterReq)
+		}
 
 		var (
 			request  Request
@@ -198,6 +209,10 @@ func loadDataRequests(fileName string) (chan Request, error) {
 					request.IsGet = true
 					request.Headers = nil
 					request.Body = nil
+
+					if rex != nil {
+						request.Skip = !rex.Match(line)
+					}
 
 				case stateQuery:
 					if match := reQuery.FindSubmatch(line); len(match) != 3 {
