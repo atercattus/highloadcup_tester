@@ -111,7 +111,7 @@ func benchServer() {
 
 	mt := time.Now().UnixNano()
 
-	var enough int64
+	var enough, currBullet int64
 
 	concurrent := int(argv.concurrent)
 
@@ -134,6 +134,7 @@ func benchServer() {
 			go pifpaf(i, &benchResultsAll, client, &enough, &queries, wg)
 		}
 	} else {
+		currBullet = 0
 		fmt.Printf("Start %s benchmark in tank mode 0->%d\n", argv.benchTime, argv.tankRps)
 		delta := float64(argv.tankRps*uint(time.Second)) / float64(argv.benchTime)
 		benchResultsAll = make(benchResult, 0)
@@ -151,7 +152,7 @@ func benchServer() {
 						maxReqNo = ii
 					}
 					muMaxReqNo.Unlock()
-					pifpaf(ii, &benchResultsAll, client, &enough, &queries, wg)
+					pifpafTank(ii, &benchResultsAll, client, &queries, &currBullet, wg)
 				}(offset, pause)
 				offset++
 			}
