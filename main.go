@@ -71,7 +71,7 @@ var (
 		tankRps       uint
 	}
 
-	maxReqNo   int64
+	maxReqNo   int
 	muMaxReqNo sync.Mutex
 
 	bullets []*Bullet
@@ -134,16 +134,19 @@ func benchServer() {
 			go pifpaf(i, &benchResultsAll, client, &enough, &queries, wg)
 		}
 	} else {
-		currBullet = 0
+		currBullet = -1
 		maxReqNo = 0
 		fmt.Printf("Start %s benchmark in tank mode 0->%d\n", argv.benchTime, argv.tankRps)
+
 		delta := float64(argv.tankRps*uint(time.Second)) / float64(argv.benchTime)
+
 		benchResultsAll = make(benchResult, 0)
 		offset := 0
 		pause := time.Duration(0)
+
 		for wrk := float64(0); wrk < float64(argv.tankRps); wrk += delta {
-			wg.Add(int(wrk) + 1)
-			for i := 0; i < int(wrk)+1; i++ {
+			wg.Add(int(wrk))
+			for i := 0; i < int(wrk); i++ {
 				benchResultsAll = append(benchResultsAll, nil)
 				go func(ii int, slp time.Duration) {
 					time.Sleep(slp)

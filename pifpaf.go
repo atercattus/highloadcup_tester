@@ -65,7 +65,7 @@ func pifpaf(i int, benchResultsAll *benchResult, client *fasthttp.Client, enough
 	atomic.AddInt64(queries, myQueries)
 }
 
-func pifpafTank(i int, benchResultsAll *benchResult, client *fasthttp.Client, queries, currBullet *int64, wg *sync.WaitGroup) {
+func pifpafTank(ii int, benchResultsAll *benchResult, client *fasthttp.Client, queries, currBullet *int64, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	var myQueries int64
@@ -73,15 +73,12 @@ func pifpafTank(i int, benchResultsAll *benchResult, client *fasthttp.Client, qu
 	uri := []byte(argv.serverAddr)
 	uriBase := len(uri)
 
-	bulletIdx := atomic.AddInt64(currBullet, 1)
-	if int(bulletIdx) >= len(bullets) {
-		return
-	}
+	bulletIdx := atomic.AddInt64(currBullet, 1) % int64(len(bullets))
 
 	muMaxReqNo.Lock()
-	if maxReqNo < bulletIdx {
-		fmt.Printf("\rSending %d request", bulletIdx)
-		maxReqNo = bulletIdx
+	if maxReqNo < ii {
+		fmt.Printf("\rBullet %d", ii)
+		maxReqNo = ii
 	}
 	muMaxReqNo.Unlock()
 
@@ -114,7 +111,7 @@ func pifpafTank(i int, benchResultsAll *benchResult, client *fasthttp.Client, qu
 		oneBenchResult.status = resp.StatusCode()
 		oneBenchResult.body = append(oneBenchResult.body, resp.Body()...)
 	}
-	(*benchResultsAll)[i] = append((*benchResultsAll)[i], oneBenchResult)
+	(*benchResultsAll)[ii] = append((*benchResultsAll)[ii], oneBenchResult)
 
 	fasthttp.ReleaseRequest(req)
 	fasthttp.ReleaseResponse(resp)

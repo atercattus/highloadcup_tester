@@ -75,7 +75,7 @@ func loadDataRequests(fileName string) (chan Request, error) {
 		)
 
 		if len(argv.filterReq) > 0 {
-			fmt.Printf("...using filter %q", argv.filterReq)
+			fmt.Printf("...using filter %q\n", argv.filterReq)
 			rex = regexp.MustCompile(argv.filterReq)
 		}
 
