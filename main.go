@@ -71,6 +71,9 @@ var (
 		tankRps       uint
 	}
 
+	maxReqNo   int64
+	muMaxReqNo sync.Mutex
+
 	bullets []*Bullet
 
 	emptyPOSTResponseBody = []byte(`{}`)
@@ -120,21 +123,19 @@ func benchServer() {
 		concurrent = 1
 	}
 
-	var maxReqNo int
-	var muMaxReqNo sync.Mutex
-
 	var benchResultsAll benchResult
 	wg := &sync.WaitGroup{}
 
 	if argv.tankRps == 0 {
 		fmt.Printf("Start %s benchmark in %d concurrent users\n", argv.benchTime, concurrent)
 		benchResultsAll = make(benchResult, concurrent)
-		wg.Add(int(concurrent))
-		for i := 0; i < int(concurrent); i++ {
+		wg.Add(concurrent)
+		for i := 0; i < concurrent; i++ {
 			go pifpaf(i, &benchResultsAll, client, &enough, &queries, wg)
 		}
 	} else {
 		currBullet = 0
+		maxReqNo = 0
 		fmt.Printf("Start %s benchmark in tank mode 0->%d\n", argv.benchTime, argv.tankRps)
 		delta := float64(argv.tankRps*uint(time.Second)) / float64(argv.benchTime)
 		benchResultsAll = make(benchResult, 0)
@@ -146,12 +147,6 @@ func benchServer() {
 				benchResultsAll = append(benchResultsAll, nil)
 				go func(ii int, slp time.Duration) {
 					time.Sleep(slp)
-					muMaxReqNo.Lock()
-					if maxReqNo < ii {
-						fmt.Printf("\rSending %d request", ii)
-						maxReqNo = ii
-					}
-					muMaxReqNo.Unlock()
 					pifpafTank(ii, &benchResultsAll, client, &queries, &currBullet, wg)
 				}(offset, pause)
 				offset++

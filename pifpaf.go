@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -76,6 +77,14 @@ func pifpafTank(i int, benchResultsAll *benchResult, client *fasthttp.Client, qu
 	if int(bulletIdx) >= len(bullets) {
 		return
 	}
+
+	muMaxReqNo.Lock()
+	if maxReqNo < bulletIdx {
+		fmt.Printf("\rSending %d request", bulletIdx)
+		maxReqNo = bulletIdx
+	}
+	muMaxReqNo.Unlock()
+
 	bullet := bullets[bulletIdx]
 	uri = append(uri[:uriBase], bullet.Request.URI...)
 
