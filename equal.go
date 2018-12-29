@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math"
 	"strconv"
 
@@ -136,12 +137,11 @@ func utf8MixedUnescaped(b []byte) []byte {
 		return bytesEmpty
 	}
 
-	var v interface{}
-	json.Unmarshal(b, &v)
-
-	res, err := json.Marshal(v)
+	unescaped, err := jsonparser.Unescape(b, nil)
 	if err != nil {
-		res = b
+		fmt.Printf("Failed to unescape: %v", err)
+		return b
 	}
-	return res
+
+	return unescaped
 }
