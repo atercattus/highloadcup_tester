@@ -241,7 +241,7 @@ func benchServer() {
 		for bt := range chtop {
 			ln := len(benchtop)
 			idx := sort.Search(ln, func(i int) bool {
-				return benchtop[i].dur <= bt.dur
+				return benchtop[i] == nil || (benchtop[i].dur <= bt.dur)
 			})
 			if idx < ln {
 				copy(benchtop[idx+1:], benchtop[idx:])
