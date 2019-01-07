@@ -178,7 +178,7 @@ func benchServer() {
 	fmt.Println(`Done. Check the answers...`)
 
 	var benchtop [10]*BenchTop
-	chtop := make(chan BenchTop, 100)
+	chtop := make(chan *BenchTop, 100)
 
 	var errorsAll int64
 
@@ -225,7 +225,7 @@ func benchServer() {
 					}
 					myErrors++
 				}
-				chtop <- BenchTop{
+				chtop <- &BenchTop{
 					req: bullet.Request.URI,
 					dur: benchResult.dur,
 				}
@@ -245,7 +245,7 @@ func benchServer() {
 			})
 			if idx < ln {
 				copy(benchtop[idx+1:], benchtop[idx:])
-				benchtop[idx] = &bt
+				benchtop[idx] = bt
 			}
 		}
 	}()
