@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -52,6 +53,12 @@ type (
 		bulletIdx int
 		status    int
 		body      []byte
+		dur       time.Duration
+	}
+
+	BenchTop struct {
+		req []byte
+		dur time.Duration
 	}
 )
 
@@ -167,9 +174,11 @@ func benchServer() {
 
 	mt = (time.Now().UnixNano() - mt) / int64(time.Millisecond)
 	rps := float64(queries) / (float64(mt) / 1000)
-	fmt.Printf("Done. %d queries in %d ms => %.0f rps\n", queries, mt, rps)
 
-	fmt.Println(`Check the answers...`)
+	fmt.Println(`Done. Check the answers...`)
+
+	var benchtop [10]*BenchTop
+	chtop := make(chan BenchTop, 100)
 
 	var errorsAll int64
 
@@ -216,6 +225,10 @@ func benchServer() {
 					}
 					myErrors++
 				}
+				chtop <- BenchTop{
+					req: bullet.Request.URI,
+					dur: benchResult.dur,
+				}
 			}
 
 			if myErrors > 0 {
@@ -224,12 +237,33 @@ func benchServer() {
 		}(i)
 	}
 
+	go func() {
+		for bt := range chtop {
+			ln := len(benchtop)
+			idx := sort.Search(ln, func(i int) bool {
+				return benchtop[i].dur <= bt.dur
+			})
+			if idx < ln {
+				copy(benchtop[idx+1:], benchtop[idx:])
+				benchtop[idx] = &bt
+			}
+		}
+	}()
+
 	wg.Wait()
+	close(chtop)
 
 	if errorsAll == 0 {
 		fmt.Println(`All answers is OK`)
 	} else {
 		fmt.Printf("%d requests (%.2f%%) failed\n", errorsAll, 100*float64(errorsAll)/float64(queries))
+	}
+	fmt.Printf("%d queries in %d ms => %.0f rps\n", queries, mt, rps)
+	fmt.Println("Top slowest queries:")
+	for _, top := range benchtop {
+		if top != nil {
+			fmt.Printf("%s:%s\n", top.dur, top.req)
+		}
 	}
 }
 

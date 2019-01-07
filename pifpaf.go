@@ -43,7 +43,9 @@ func pifpaf(i int, benchResultsAll *benchResult, client *fasthttp.Client, enough
 
 			myQueries++
 
+			tnow := time.Now()
 			err := client.DoTimeout(req, resp, 2*time.Second)
+			oneBenchResult.dur = time.Since(tnow)
 			if err != nil {
 				oneBenchResult.status = -1
 				//fmt.Println(`client.DoTimeout fail:`, err)
@@ -103,7 +105,9 @@ func pifpafTank(ii int, benchResultsAll *benchResult, client *fasthttp.Client, q
 
 	myQueries++
 
+	tnow := time.Now()
 	err := client.DoTimeout(req, resp, 2*time.Second)
+	oneBenchResult.dur = time.Since(tnow)
 	if err != nil {
 		oneBenchResult.status = -1
 		//fmt.Println(`client.DoTimeout fail:`, err)
