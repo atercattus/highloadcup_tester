@@ -67,6 +67,7 @@ var (
 		hlcupdocsPath string
 		serverAddr    string
 		filterReq     string
+		filterURI     string
 		phase         uint
 		benchTime     time.Duration
 		concurrent    uint
@@ -90,6 +91,7 @@ func init() {
 	flag.StringVar(&argv.hlcupdocsPath, `hlcupdocs`, `./hlcupdocs/`, `path to hlcupdocs/`)
 	flag.StringVar(&argv.serverAddr, `addr`, `http://127.0.0.1:80`, `test server address`)
 	flag.StringVar(&argv.filterReq, `filter`, ``, `regexp for filter requests, i.e. "^458 " or "/accounts/filter/"`)
+	flag.StringVar(&argv.filterURI, `uri`, ``, `substring for filter requests URI`)
 	flag.UintVar(&argv.phase, `phase`, 1, `phase number (1, 2, 3)`)
 	flag.DurationVar(&argv.benchTime, `time`, 10*time.Second, `benchmark duration`)
 	flag.BoolVar(&argv.testRun, `test`, false, `test run (send every query only once. ignore -time and -concurrent)`)

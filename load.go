@@ -72,11 +72,16 @@ func loadDataRequests(fileName string) (chan Request, error) {
 			methodGET           = []byte(`GET`)
 			headerContentLength = []byte(`Content-Length`)
 			rex                 *regexp.Regexp
+			furi                []byte
 		)
 
 		if len(argv.filterReq) > 0 {
 			fmt.Printf("...using filter %q\n", argv.filterReq)
 			rex = regexp.MustCompile(argv.filterReq)
+		}
+		if len(argv.filterURI) > 0 {
+			fmt.Printf("...using URI filter %q\n", argv.filterURI)
+			furi = []byte(argv.filterURI)
 		}
 
 		var (
@@ -123,6 +128,9 @@ func loadDataRequests(fileName string) (chan Request, error) {
 					} else {
 						request.IsGet = bytes.Equal(match[1], methodGET)
 						request.URI = append([]byte{}, match[2]...)
+						if furi != nil {
+							request.Skip = !bytes.Contains(request.URI, furi)
+						}
 					}
 					state = stateHeaders
 
